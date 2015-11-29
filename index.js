@@ -2,21 +2,21 @@ var fs = require('fs');
 var pixelmatch = require('pixelmatch');
 var jpeg = require('jpeg-js');
 var queue = require('queue-async');
-// var PNG = require('pngjs2').PNG;
-var jimp = require("jimp");
+var PNG = require('pngjs2').PNG;
 var path = require('path');
 
-var width = 2560, height = 1920;
+// var width = 2560, height = 1920;
+var width = null, height = null;
 
 if (require.main === module) {
     var fileCache = [];
 
     function loadFile(filename, callback) {
-        fs.readFile(path.normalize(process.argv[2] + '/' + filename), function(err, data) {
-            if (err) return callback(err);
-            fileCache.push(jpeg.decode(data));
-            callback();
-        });
+        var jpegData = jpeg.decode(fs.readFileSync(path.normalize(filename)));
+        width = jpegData.width;
+        height = jpegData.height;
+        fileCache.push(jpegData.data);
+        callback();
     }
 
     // console.log(process.argv)
@@ -24,18 +24,20 @@ if (require.main === module) {
         files.sort();
         for(var i = 1; i < files.length; i++) {
             var q = queue();
+
             if (fileCache.length === 0) {
-                q.defer(loadFile, files[i - 1]);
+                q.defer(function(cb) { loadFile(process.argv[2] + '/' + files[i - 1], cb); });
             }
-            q.defer(loadFile, files[i]);
+            q.defer(function(cb) { loadFile(process.argv[2] + '/' + files[i], cb); });
+
             q.awaitAll(function() {
-                // var diff = new PNG({width: width, height: height});
-                console.log(fileCache);
-                var numDiff = pixelmatch(fileCache[0], fileCache[1], null, width, height);
-                console.log(files[i - 1], files[i], numDiff);
-                // if (numDiff > 100) {
-                //     console.log(files[i]);
-                // }
+                var diff = new PNG({width: width, height: height});
+                var numDiff = pixelmatch(fileCache[0], fileCache[1], diff.data, width, height, {threshold: 0.1, includeAA: false});
+
+                if (numDiff > 100) {
+                    diff.pack().pipe(fs.createWriteStream('diff_' + path.basename(files[i], '.jpg') + '.png'));
+                    console.log(files[i]);
+                }
                 fileCache.shift();
             });
         }
