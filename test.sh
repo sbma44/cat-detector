@@ -1,0 +1,13 @@
+GITSHA="$(git log -n 1 | head -n 1 | sed 's/commit //' | head -c 8)"
+./run.sh '/Volumes/mapbox/cat photos/122MEDIA/' $GITSHA &
+PID=$!
+echo "PID = $PID"
+i=0
+mkdir -p out/$GITSHA/test
+while [ $i -lt 120 ]; do
+    ps -p $PID -o %mem=,vsz= >> out/$GITSHA/test/mem.log
+    sleep 1
+    i=$((i+1))
+done
+
+kill -9 $PID
