@@ -1,3 +1,5 @@
+set -eu
+
 GITSHA="$(git log -n 1 | head -n 1 | sed 's/commit //' | head -c 8)"
 ./run.sh '/Volumes/mapbox/cat photos/122MEDIA/' $GITSHA &
 PID=$!

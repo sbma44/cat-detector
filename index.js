@@ -36,7 +36,6 @@ if (require.main === module) {
         });
     }
 
-    console.log(process.argv[2]);
     fs.readdir(process.argv[2], function(err, files) {
         files.sort();
         for(var i = 1; i < files.length; i++) {
