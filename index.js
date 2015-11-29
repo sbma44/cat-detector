@@ -5,7 +5,6 @@ var queue = require('queue-async');
 var PNG = require('pngjs2').PNG;
 var path = require('path');
 
-// var width = 2560, height = 1920;
 var width = null, height = null;
 
 if (require.main === module) {
@@ -13,33 +12,34 @@ if (require.main === module) {
 
     function loadFile(filename, callback) {
         var jpegData = jpeg.decode(fs.readFileSync(path.normalize(filename)));
-        width = jpegData.width;
-        height = jpegData.height;
+        width = parseInt(jpegData.width);
+        height = parseInt(jpegData.height);
         fileCache.push(jpegData.data);
         callback();
     }
 
-    // console.log(process.argv)
+    function imgdiff(f1, f2) {
+        var q = queue();
+        if (fileCache.length === 0) {
+            q.defer(function(cb) { loadFile(process.argv[2] + '/' + f1, cb); });
+        }
+        q.defer(function(cb) { loadFile(process.argv[2] + '/' + f2, cb); });
+
+        q.awaitAll(function() {
+            var diff = new PNG({width: width, height: height});
+            var numDiff = pixelmatch(fileCache[0], fileCache[1], diff.data, width, height, {threshold: 0.1, includeAA: false});
+            if (numDiff > 200) {
+                diff.pack().pipe(fs.createWriteStream('out/diff_' + path.basename(f2, '.jpg') + '.png'));
+                console.log(f2);
+            }
+            fileCache.shift();
+        });
+    }
+
     fs.readdir(process.argv[2], function(err, files) {
         files.sort();
         for(var i = 1; i < files.length; i++) {
-            var q = queue();
-
-            if (fileCache.length === 0) {
-                q.defer(function(cb) { loadFile(process.argv[2] + '/' + files[i - 1], cb); });
-            }
-            q.defer(function(cb) { loadFile(process.argv[2] + '/' + files[i], cb); });
-
-            q.awaitAll(function() {
-                var diff = new PNG({width: width, height: height});
-                var numDiff = pixelmatch(fileCache[0], fileCache[1], diff.data, width, height, {threshold: 0.1, includeAA: false});
-
-                if (numDiff > 100) {
-                    diff.pack().pipe(fs.createWriteStream('diff_' + path.basename(files[i], '.jpg') + '.png'));
-                    console.log(files[i]);
-                }
-                fileCache.shift();
-            });
+            imgdiff(files[i-1], files[i]);
         }
     });
 }
