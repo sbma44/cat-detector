@@ -27,7 +27,7 @@ if (require.main === module) {
 
         q.awaitAll(function() {
             // var diff = new PNG({width: width, height: height});
-            var diff = { data: new Buffer() };
+            var diff = { data: new Buffer(width * height) };
             var numDiff = pixelmatch(fileCache[0], fileCache[1], diff.data, width, height, {threshold: 0.1, includeAA: false});
             // var numDiff = pixelmatch(fileCache[0], fileCache[1], null, width, height, {threshold: 0.1, includeAA: false});
             if (numDiff > 200) {
