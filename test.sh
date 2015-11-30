@@ -1,7 +1,7 @@
 set -eu
 
 GITSHA="$(git log -n 1 | head -n 1 | sed 's/commit //' | head -c 8)"
-./run.sh '/Volumes/mapbox/cat photos/123MEDIA/' $GITSHA &
+./run.sh '/Volumes/mapbox/cat photos/123MEDIA/' &
 sleep 2
 PID="$(ps aux | grep node | grep -v grep | awk '{print $2}')"
 echo "PID = $PID"
