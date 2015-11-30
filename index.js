@@ -31,7 +31,7 @@ if (require.main === module) {
             var numDiff = pixelmatch(fileCache[0], fileCache[1], diff.data, width, height, {threshold: 0.1, includeAA: false});
             // var numDiff = pixelmatch(fileCache[0], fileCache[1], null, width, height, {threshold: 0.1, includeAA: false});
             if (numDiff > 200) {
-                fs.writeFileSync(path.normalize(process.argv[3] + '/diff_' + path.basename(f2, '.jpg') + '.png'), diff);
+                fs.writeFileSync(path.normalize(process.argv[3] + '/img/diff_' + path.basename(f2, '.jpg') + '.png'), diff);
                 // diff.pack().pipe(fs.createWriteStream(path.normalize(process.argv[3] + '/diff_' + path.basename(f2, '.jpg') + '.png')));
                 console.log(f2);
             }
